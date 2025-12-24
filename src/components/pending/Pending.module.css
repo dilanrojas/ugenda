@@ -1,0 +1,21 @@
+.pending {
+  height: 100%;
+  background-color: var(--bg);
+  padding: 1rem;
+  border-left: 1px solid var(--bg-secondary);
+}
+
+.pendingHeader {
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.pendingHeader h1 {
+  text-transform: uppercase;
+  color: var(--fg-secondary);
+  font-size: 1.1rem;
+  font-weight: 600;
+}
