@@ -2,29 +2,37 @@
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import { Task } from '../types/Task';
+import { Course } from '../types/Course';
 
 interface CourseContextType {
   pending: Task[]
   setPending: React.Dispatch<React.SetStateAction<Task[]>>
+  courses: Course[]
+  setCourses: React.Dispatch<React.SetStateAction<Course[]>>
 }
 
 const CourseContext = createContext<CourseContextType | undefined>(undefined);
 
 export function CourseProvider({ children }: { children: ReactNode }) {
   const [pending, setPending] = useState<Task[]>([]);
-  const defaultPending: Task = { title: 'Bienvenido/a', course: 'Organiza tu vida estudiantil', date: new Date().toLocaleDateString("en-CA").slice(0, 10), editable: false };
+  const [courses, setCourses] = useState<Course[]>([]);
+  const defaultPending: Task = { title: 'Bienvenido/a', course: 'Organiza tu vida estudiantil', date: new Date().toLocaleDateString("en-CA").slice(0, 10) };
+  const defaultCourses: Course = { title: 'Ugenda I', code: 'UG-3532' };
 
   useEffect(() => {
-    setPending([defaultPending])
+    setPending([defaultPending]);
+    setCourses([defaultCourses]);
   }, [])
 
   return (
-    <CourseContext.Provider value={{ pending: pending, setPending: setPending }}>
+    <CourseContext.Provider value={{
+      pending: pending, setPending: setPending,
+      courses: courses, setCourses: setCourses
+    }}>
       {children}
     </CourseContext.Provider>
   )
 }
-
 
 export function useCourse() {
   const context = useContext(CourseContext);

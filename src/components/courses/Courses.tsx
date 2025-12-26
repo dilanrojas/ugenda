@@ -1,52 +1,51 @@
 'use client';
 
-import styles from './Pending.module.css';
-import { useCourse } from '@/context/CourseContext';
+import styles from './Courses.module.css';
+import { useCourse } from '../../context/CourseContext';
 import { useState } from 'react';
-import { Task } from '../../types/Task';
+import { Course } from '../../types/Course';
 
-export default function Pending() {
-  const { pending, setPending } = useCourse();
-  const [isAdding, setIsAdding] = useState<boolean>(false);
+export default function Courses() {
+  const { courses, setCourses } = useCourse();
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
-  const [date, setDate] = useState<string>("");
-  const [course, setCourse] = useState<string>("");
+  const [isAdding, setIsAdding] = useState<boolean>(false);
   const [title, setTitle] = useState<string>("");
+  const [code, setCode] = useState<string>("");
+
+  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setTitle(e.target.value);
+  }
+
+  const handleCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setCode(e.target.value);
+  }
+
+  const handleCancel = () => {
+    clearData();
+    setSelectedIndex(null);
+    setIsAdding(false);
+  };
 
   const handleSave = () => {
     // TODO --> Add notifications (avoid alerts)
 
-    if (!title && !course && !date) {
-      alert("Ingrese los datos correspondientes");
-      return;
-    }
     if (!title) {
       alert("Digite un título válido");
       return;
     }
 
-    if (!course) {
-      alert("Digite un curso válido");
-      return;
-    }
-
-    if (!date) {
-      alert("Digite una fecha válida");
-      return;
-    }
-
-    setPending(prev => {
+    setCourses(prev => {
       // EDIT
       if (selectedIndex !== null) {
         return prev.map((task, i) =>
           i === selectedIndex
-            ? { title, course, date }
+            ? { title, code }
             : task
         );
       }
 
       // ADD
-      return [...prev, { title, course, date }];
+      return [...prev, { title, code }];
     });
 
     clearData();
@@ -57,7 +56,7 @@ export default function Pending() {
   const handleDelete = () => {
     if (selectedIndex === null) return;
 
-    setPending(prev =>
+    setCourses(prev =>
       prev.filter((_, i) => i !== selectedIndex)
     );
 
@@ -68,62 +67,42 @@ export default function Pending() {
 
   const clearData = () => {
     setTitle("");
-    setCourse("");
-    setDate("");
+    setCode("");
   }
 
   const handleAddClick = () => {
     setIsAdding((prev) => !prev)
   }
 
-  const handleCancel = () => {
-    clearData();
-    setSelectedIndex(null);
-    setIsAdding(false);
-  };
-
-  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setDate(e.target.value);
-  };
-
-  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setTitle(e.target.value);
-  }
-
-  const handleCourseChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setCourse(e.target.value);
-  }
-
   const handleTaskClick = (
-    task: Task,
+    course: Course,
     index: number
   ) => {
-    setTitle(task.title);
-    setCourse(task.course);
-    setDate(task.date);
+    setTitle(course.title);
+    setCode(course.code ?? "");
 
     setSelectedIndex(index);
     setIsAdding(true);
   };
 
   return (
-    <aside className={styles.pending}>
-      <header className={styles.pendingHeader}>
-        <h1>Pendientes</h1>
+    <aside className={styles.courses}>
+      <header className={styles.coursesHeader}>
+        <h1>Cursos</h1>
         <button onClick={handleAddClick}>+</button>
       </header>
-      <ul className={styles.pendingList}>
-        {pending && pending.map((task, index) => (
+      <ul className='flow'>
+        {courses && courses.map((course, index) => (
           <li key={index} onClick={(e) => {
             e.preventDefault();
-            handleTaskClick(task, index);
+            handleTaskClick(course, index);
           }}>
-            <a href='#'>{task.title} - {task.course}</a>
+            <a href='#'>{course.title}</a>
           </li>
         ))}
       </ul>
 
-      {/* Add task dialog */}
+      {/* Add course dialog */}
       <dialog className={styles.addModal} open={isAdding}>
         <div className={styles.addModalContent}>
           <h3>Editar tarea</h3>
@@ -139,23 +118,14 @@ export default function Pending() {
               maxLength={15}
             />
             <input
-              placeholder='Curso'
+              placeholder='Sigla (Opcional)'
               type='text'
-              name='task-course'
-              id='task-course'
-              value={course}
-              onChange={handleCourseChange}
+              name='task-code'
+              id='task-code'
+              value={code}
+              onChange={handleCodeChange}
               minLength={1}
               maxLength={25}
-            />
-            <input
-              type="date"
-              id="start"
-              name="trip-start"
-              value={date}
-              onChange={handleDateChange}
-              min={`${new Date().getFullYear()}-01-01`}
-              max={`${new Date().getFullYear() + 10}-12-31`}
             />
             <button type="button" onClick={handleSave}>Guardar</button>
             {selectedIndex !== null && (
