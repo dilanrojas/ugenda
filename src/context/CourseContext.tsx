@@ -17,7 +17,7 @@ export function CourseProvider({ children }: { children: ReactNode }) {
   const [pending, setPending] = useState<Task[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
   const defaultPending: Task = { title: 'Bienvenido/a', course: 'Organiza tu vida estudiantil', date: new Date().toLocaleDateString("en-CA").slice(0, 10) };
-  const defaultCourses: Course = { title: 'Ugenda I', code: 'UG-3532' };
+  const defaultCourses: Course = { title: 'Ugenda', code: 'UG-3532' };
 
   useEffect(() => {
     setPending([defaultPending]);

@@ -6,7 +6,7 @@ import { useState } from 'react';
 import { Task } from '../../types/Task';
 
 export default function Pending() {
-  const { pending, setPending } = useCourse();
+  const { pending, setPending, courses } = useCourse();
   const [isAdding, setIsAdding] = useState<boolean>(false);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [date, setDate] = useState<string>("");
@@ -36,6 +36,8 @@ export default function Pending() {
     }
 
     setPending(prev => {
+      // TODO --> Add completed flag
+
       // EDIT
       if (selectedIndex !== null) {
         return prev.map((task, i) =>
@@ -90,9 +92,9 @@ export default function Pending() {
     setTitle(e.target.value);
   }
 
-  const handleCourseChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleCourseChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setCourse(e.target.value);
-  }
+  };
 
   const handleTaskClick = (
     task: Task,
@@ -106,19 +108,62 @@ export default function Pending() {
     setIsAdding(true);
   };
 
+  const getDateStatus = (dateStr: string) => {
+    // TODO --> Fix tomorrow tasks
+
+    const today = new Date();
+    const taskDate = new Date(dateStr);
+
+    // Normalize dates (ignore time)
+    today.setHours(0, 0, 0, 0);
+    taskDate.setHours(0, 0, 0, 0);
+
+    const diffMs = taskDate.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+
+    // Future
+    if (diffDays > 0) {
+      if (diffDays >= 30) {
+        const months = Math.floor(diffDays / 30);
+        return `Faltan ${months} mes${months > 1 ? "es" : ""}`;
+      }
+
+      return `Faltan ${diffDays} día${diffDays > 1 ? "s" : ""}`;
+    }
+
+    // Today
+    if (diffDays === 0) {
+      return "Vence hoy";
+    }
+
+    // Past
+    const overdueDays = Math.abs(diffDays);
+
+    if (overdueDays >= 30) {
+      const months = Math.floor(overdueDays / 30);
+      return `Vencido hace ${months} mes${months > 1 ? "es" : ""}`;
+    }
+
+    return `Vencido hace ${overdueDays} día${overdueDays > 1 ? "s" : ""}`;
+  };
+
   return (
     <aside className={styles.pending}>
       <header className={styles.pendingHeader}>
         <h1>Pendientes</h1>
         <button onClick={handleAddClick}>+</button>
       </header>
-      <ul className={styles.pendingList}>
+      <ul className={`${styles.pendingList} flow`}>
         {pending && pending.map((task, index) => (
           <li key={index} onClick={(e) => {
             e.preventDefault();
             handleTaskClick(task, index);
           }}>
-            <a href='#'>{task.title} - {task.course}</a>
+            <a href="#">
+              {task.title} – {task.course}
+              <br />
+              <small>{getDateStatus(task.date)}</small>
+            </a>
           </li>
         ))}
       </ul>
@@ -138,16 +183,15 @@ export default function Pending() {
               minLength={1}
               maxLength={15}
             />
-            <input
-              placeholder='Curso'
-              type='text'
-              name='task-course'
-              id='task-course'
-              value={course}
-              onChange={handleCourseChange}
-              minLength={1}
-              maxLength={25}
-            />
+            <select name='courses' id='course-select' value={course} onChange={handleCourseChange}>
+              <option value=''>-- Seleccione un curso --</option>
+              {courses && courses.map((course, index) => (
+                <option key={index} value={course.title}>
+                  {course.title}
+                  {course.code && ` (${course.code})`}
+                </option>
+              ))}
+            </select>
             <input
               type="date"
               id="start"
