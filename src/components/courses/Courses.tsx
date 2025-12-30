@@ -4,13 +4,24 @@ import styles from './Courses.module.css';
 import { useCourse } from '../../context/CourseContext';
 import { useState } from 'react';
 import { Course } from '../../types/Course';
+import { AddIcon } from '../../assets/Icons';
 
 export default function Courses() {
-  const { courses, setCourses } = useCourse();
+  const { courses, setCourses, filter, setFilter, clearFilter } = useCourse();
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [isAdding, setIsAdding] = useState<boolean>(false);
   const [title, setTitle] = useState<string>("");
   const [code, setCode] = useState<string>("");
+
+  const isCourseActive = (course: Course) => {
+    if (filter === 'all') return false;
+
+    if (course.code) {
+      return filter === course.code;
+    }
+
+    return filter === course.title;
+  };
 
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setTitle(e.target.value);
@@ -74,38 +85,51 @@ export default function Courses() {
     setIsAdding((prev) => !prev)
   }
 
-  const handleTaskClick = (
-    course: Course,
-    index: number
-  ) => {
-    setTitle(course.title);
-    setCode(course.code ?? "");
+  // const handleCourseClick = (
+  //   course: Course,
+  //   index: number
+  // ) => {
+  //   setTitle(course.title);
+  //   setCode(course.code ?? "");
+  //
+  //   setSelectedIndex(index);
+  //   setIsAdding(true);
+  // };
 
-    setSelectedIndex(index);
-    setIsAdding(true);
-  };
+  const handleCourseClick = (course: Course) => {
+    setFilter(() => {
+      if (course.code) return course.code;
+      return course.title
+    });
+  }
 
   return (
-    <aside className={styles.courses}>
-      <header className={styles.coursesHeader}>
+    <aside className='sidebar'>
+      <header className='sidebarHeader'>
         <h1>Cursos</h1>
-        <button onClick={handleAddClick}>+</button>
+        <button onClick={handleAddClick}><span>Agregar</span> <AddIcon /></button>
       </header>
       <ul className='flow'>
-        {courses && courses.map((course, index) => (
-          <li key={index} onClick={(e) => {
-            e.preventDefault();
-            handleTaskClick(course, index);
-          }}>
-            <a href='#'>{course.title}</a>
+        <li onClick={clearFilter}>
+          <span className={filter === 'all' ? styles.active : ''}>Todos</span>
+        </li>
+        {courses.map((course, index) => (
+          <li
+            key={index}
+            onClick={(e) => {
+              e.preventDefault();
+              handleCourseClick(course);
+            }}
+          >
+            <span className={isCourseActive(course) ? styles.active : ''}>{course.title}</span>
           </li>
         ))}
       </ul>
 
       {/* Add course dialog */}
-      <dialog className={styles.addModal} open={isAdding}>
-        <div className={styles.addModalContent}>
-          <h3>Editar tarea</h3>
+      <dialog className='modal' open={isAdding}>
+        <div className='modalContent'>
+          <h3>Curso</h3>
           <form method="dialog">
             <input
               placeholder='Título'
@@ -115,7 +139,7 @@ export default function Courses() {
               value={title}
               onChange={handleTitleChange}
               minLength={1}
-              maxLength={15}
+              maxLength={30}
             />
             <input
               placeholder='Sigla (Opcional)'
@@ -125,7 +149,7 @@ export default function Courses() {
               value={code}
               onChange={handleCodeChange}
               minLength={1}
-              maxLength={25}
+              maxLength={10}
             />
             <button type="button" onClick={handleSave}>Guardar</button>
             {selectedIndex !== null && (

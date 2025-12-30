@@ -7,7 +7,7 @@ import interactionPlugin from "@fullcalendar/interaction";
 import { useCourse } from '../../context/CourseContext';
 
 export default function Calendar() {
-  const { pending } = useCourse();
+  const { data } = useCourse();
 
   return (
     <div className={styles.calendarWrapper}>
@@ -15,7 +15,7 @@ export default function Calendar() {
         plugins={[dayGridPlugin, interactionPlugin]}
         initialView="dayGridMonth"
         weekends={true}
-        events={pending}
+        events={data}
       />
     </div>
   )

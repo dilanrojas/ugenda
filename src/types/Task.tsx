@@ -1,5 +1,7 @@
+import { Course } from './Course';
+
 export interface Task {
   title: string
-  course: string
+  course: Course
   date: string
 }

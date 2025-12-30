@@ -8,7 +8,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Ugenda",
+  title: "Ugenda - Organiza tu vida estudiantil",
   description: "Eslogan", // <-- TODO
 };
 

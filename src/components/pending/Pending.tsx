@@ -4,13 +4,15 @@ import styles from './Pending.module.css';
 import { useCourse } from '@/context/CourseContext';
 import { useState } from 'react';
 import { Task } from '../../types/Task';
+import { Course } from '../../types/Course';
+import { AddIcon } from '../../assets/Icons';
 
 export default function Pending() {
-  const { pending, setPending, courses } = useCourse();
+  const { setPending, courses, data } = useCourse();
   const [isAdding, setIsAdding] = useState<boolean>(false);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [date, setDate] = useState<string>("");
-  const [course, setCourse] = useState<string>("");
+  const [course, setCourse] = useState<Course>();
   const [title, setTitle] = useState<string>("");
 
   const handleSave = () => {
@@ -26,7 +28,7 @@ export default function Pending() {
     }
 
     if (!course) {
-      alert("Digite un curso válido");
+      alert("Seleccione un curso válido");
       return;
     }
 
@@ -70,7 +72,7 @@ export default function Pending() {
 
   const clearData = () => {
     setTitle("");
-    setCourse("");
+    setCourse(undefined);
     setDate("");
   }
 
@@ -93,7 +95,13 @@ export default function Pending() {
   }
 
   const handleCourseChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setCourse(e.target.value);
+    const selectedCode = e.target.value;
+
+    const selectedCourse = courses.find(
+      (c) => c.code === selectedCode
+    );
+
+    setCourse(selectedCourse);
   };
 
   const handleTaskClick = (
@@ -108,70 +116,90 @@ export default function Pending() {
     setIsAdding(true);
   };
 
-  const getDateStatus = (dateStr: string) => {
-    // TODO --> Fix tomorrow tasks
+  const pluralize = (value: number, singular: string) =>
+    `${value} ${value === 1 ? singular : singular + 's'}`;
 
+  const dateDiffInDays = (a: Date, b: Date): number => {
+    const MS_PER_DAY = 1000 * 60 * 60 * 24;
+    const utc1 = Date.UTC(a.getFullYear(), a.getMonth(), a.getDate());
+    const utc2 = Date.UTC(b.getFullYear(), b.getMonth(), b.getDate());
+    return Math.floor((utc2 - utc1) / MS_PER_DAY);
+  };
+
+  const getDateStatus = (dateStr: string): string => {
     const today = new Date();
-    const taskDate = new Date(dateStr);
+    const [y, m, d] = dateStr.split('-').map(Number);
+    const taskDate = new Date(y, m - 1, d);
 
-    // Normalize dates (ignore time)
-    today.setHours(0, 0, 0, 0);
-    taskDate.setHours(0, 0, 0, 0);
+    const diffDays = dateDiffInDays(today, taskDate);
+    const absDays = Math.abs(diffDays);
 
-    const diffMs = taskDate.getTime() - today.getTime();
-    const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+    if (diffDays === 0) return 'Vence hoy';
 
-    // Future
-    if (diffDays > 0) {
-      if (diffDays >= 30) {
-        const months = Math.floor(diffDays / 30);
-        return `Faltan ${months} mes${months > 1 ? "es" : ""}`;
-      }
-
-      return `Faltan ${diffDays} día${diffDays > 1 ? "s" : ""}`;
+    // YEARS (only years)
+    if (absDays >= 365) {
+      const years = Math.floor(absDays / 365);
+      return diffDays > 0
+        ? `Vence en ${pluralize(years, 'año')}`
+        : `Vencido hace ${pluralize(years, 'año')}`;
     }
 
-    // Today
-    if (diffDays === 0) {
-      return "Vence hoy";
+    // MONTHS (only months)
+    if (absDays >= 30) {
+      const months = Math.floor(absDays / 30);
+      return diffDays > 0
+        ? `Vence en ${pluralize(months, 'mes')}`
+        : `Vencido hace ${pluralize(months, 'mes')}`;
     }
 
-    // Past
-    const overdueDays = Math.abs(diffDays);
+    // WEEKS + DAYS (only for soon dates)
+    if (absDays >= 7) {
+      const weeks = Math.floor(absDays / 7);
+      const days = absDays % 7;
 
-    if (overdueDays >= 30) {
-      const months = Math.floor(overdueDays / 30);
-      return `Vencido hace ${months} mes${months > 1 ? "es" : ""}`;
+      const parts = [
+        pluralize(weeks, 'semana'),
+        days ? pluralize(days, 'día') : null,
+      ]
+        .filter(Boolean)
+        .join(' y ');
+
+      return diffDays > 0
+        ? `Vence en ${parts}`
+        : `Vencido hace ${parts}`;
     }
 
-    return `Vencido hace ${overdueDays} día${overdueDays > 1 ? "s" : ""}`;
+    // DAYS ONLY
+    return diffDays > 0
+      ? `Vence en ${pluralize(absDays, 'día')}`
+      : `Vencido hace ${pluralize(absDays, 'día')}`;
   };
 
   return (
-    <aside className={styles.pending}>
-      <header className={styles.pendingHeader}>
+    <aside className='sidebar'>
+      <header className='sidebarHeader'>
         <h1>Pendientes</h1>
-        <button onClick={handleAddClick}>+</button>
+        <button onClick={handleAddClick}><span>Agregar</span> <AddIcon /></button>
       </header>
-      <ul className={`${styles.pendingList} flow`}>
-        {pending && pending.map((task, index) => (
+      <ol className={`${styles.pendingList} flow`}>
+        {data && data.map((task, index) => (
           <li key={index} onClick={(e) => {
             e.preventDefault();
             handleTaskClick(task, index);
           }}>
-            <a href="#">
-              {task.title} – {task.course}
+            <span>
+              {task.title} – {task.course.title} {task.course.code && `(${task.course.code})`}
               <br />
               <small>{getDateStatus(task.date)}</small>
-            </a>
+            </span>
           </li>
         ))}
-      </ul>
+      </ol>
 
       {/* Add task dialog */}
-      <dialog className={styles.addModal} open={isAdding}>
-        <div className={styles.addModalContent}>
-          <h3>Editar tarea</h3>
+      <dialog className='modal' open={isAdding}>
+        <div className='modalContent'>
+          <h3>Pendiente</h3>
           <form method="dialog">
             <input
               placeholder='Título'
@@ -183,12 +211,16 @@ export default function Pending() {
               minLength={1}
               maxLength={15}
             />
-            <select name='courses' id='course-select' value={course} onChange={handleCourseChange}>
-              <option value=''>-- Seleccione un curso --</option>
-              {courses && courses.map((course, index) => (
-                <option key={index} value={course.title}>
-                  {course.title}
-                  {course.code && ` (${course.code})`}
+            <select
+              id="course-select"
+              value={course?.code ?? ""}
+              onChange={handleCourseChange}
+            >
+              <option value="">-- Seleccione un curso --</option>
+              {courses.map((c, index) => (
+                <option key={index} value={c.code}>
+                  {c.title}
+                  {c.code && ` (${c.code})`}
                 </option>
               ))}
             </select>
