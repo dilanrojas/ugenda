@@ -129,7 +129,9 @@ export default function Courses() {
       {/* Add course dialog */}
       <dialog className='modal' open={isAdding}>
         <div className='modalContent'>
-          <h3>Curso</h3>
+          <h3>
+            {selectedIndex !== null ? 'Editar curso' : 'Curso'}
+          </h3>
           <form method="dialog">
             <input
               placeholder='Título'
@@ -151,17 +153,18 @@ export default function Courses() {
               minLength={1}
               maxLength={10}
             />
-            <button type="button" onClick={handleSave}>Guardar</button>
+            <button type="button" className='btn-save' onClick={handleSave}>Guardar</button>
             {selectedIndex !== null && (
               <button
                 type="button"
+                className='btn-delete'
                 onClick={handleDelete}
                 style={{ color: 'red' }}
               >
                 Eliminar
               </button>
             )}
-            <button type="button" onClick={handleCancel}>Cancelar</button>
+            <button type="button" className='btn-cancel' onClick={handleCancel}>Cancelar</button>
           </form>
         </div>
       </dialog>

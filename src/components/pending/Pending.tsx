@@ -189,9 +189,8 @@ export default function Pending() {
           }}>
             <span>
               {task.title} – {task.course.title} {task.course.code && `(${task.course.code})`}
-              <br />
-              <small>{getDateStatus(task.date)}</small>
             </span>
+            <small>{getDateStatus(task.date)}</small>
           </li>
         ))}
       </ol>
@@ -199,8 +198,10 @@ export default function Pending() {
       {/* Add task dialog */}
       <dialog className='modal' open={isAdding}>
         <div className='modalContent'>
-          <h3>Pendiente</h3>
-          <form method="dialog">
+          <h3>
+            {selectedIndex !== null ? 'Editar pendiente' : 'Pendientes'}
+          </h3>
+          <form method="dialog" autoComplete='off'>
             <input
               placeholder='Título'
               type='text'
@@ -216,7 +217,7 @@ export default function Pending() {
               value={course?.code ?? ""}
               onChange={handleCourseChange}
             >
-              <option value="">-- Seleccione un curso --</option>
+              <option value="" disabled hidden>Seleccione un curso</option>
               {courses.map((c, index) => (
                 <option key={index} value={c.code}>
                   {c.title}
@@ -233,17 +234,18 @@ export default function Pending() {
               min={`${new Date().getFullYear()}-01-01`}
               max={`${new Date().getFullYear() + 10}-12-31`}
             />
-            <button type="button" onClick={handleSave}>Guardar</button>
+            <button type="button" className='btn-save' onClick={handleSave}>Guardar</button>
             {selectedIndex !== null && (
               <button
                 type="button"
+                className='btn-delete'
                 onClick={handleDelete}
                 style={{ color: 'red' }}
               >
                 Eliminar
               </button>
             )}
-            <button type="button" onClick={handleCancel}>Cancelar</button>
+            <button type="button" className='btn-cancel' onClick={handleCancel}>Cancelar</button>
           </form>
         </div>
       </dialog>

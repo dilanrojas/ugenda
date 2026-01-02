@@ -1,4 +1,3 @@
 .active {
-  background-color: var(--accent-1) !important;
-  color: var(--bg);
+  color: var(--accent-1) !important;
 }
